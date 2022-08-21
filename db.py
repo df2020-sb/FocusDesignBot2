@@ -8,6 +8,7 @@ load_dotenv()
 
 cred = credentials.Certificate({
     "type": "service_account",
+    "token_uri": "https://oauth2.googleapis.com/token",
     "projectId": os.environ.get('FIREBASE_PROJECT_ID'),
     "private_key": os.environ.get('FIREBASE_PRIVATE_KEY'),
     "client_email": os.environ.get('FIREBASE_CLIENT_EMAIL'),
