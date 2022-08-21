@@ -1,8 +1,11 @@
+import os
+from dotenv import load_dotenv
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import db
 
-cred = credentials.Certificate("/Users/denis/keys/focusdesignbot-firebase-adminsdk-6vob8-45f374b859.json")
+load_dotenv()
+cred = credentials.Certificate(cert=os.environ.get('FIREBASE_CRED_PATH'))
 
 default_app = firebase_admin.initialize_app(cred, {
     "databaseURL": "https://focusdesignbot-default-rtdb.firebaseio.com",
