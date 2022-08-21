@@ -1,3 +1,4 @@
+import json
 import os
 from dotenv import load_dotenv
 import firebase_admin
@@ -6,13 +7,7 @@ from firebase_admin import db
 
 load_dotenv()
 
-cred = credentials.Certificate({
-    "type": "service_account",
-    "token_uri": "https://oauth2.googleapis.com/token",
-    "projectId": os.environ.get('FIREBASE_PROJECT_ID'),
-    "private_key": os.environ.get('FIREBASE_PRIVATE_KEY'),
-    "client_email": os.environ.get('FIREBASE_CLIENT_EMAIL'),
-})
+cred = credentials.Certificate(json.loads(os.environ.get('GOOGLE_CREDS')))
 
 default_app = firebase_admin.initialize_app(cred, {
     "databaseURL": "https://focusdesignbot-default-rtdb.firebaseio.com",
