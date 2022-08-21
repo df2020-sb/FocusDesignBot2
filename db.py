@@ -5,7 +5,12 @@ from firebase_admin import credentials
 from firebase_admin import db
 
 load_dotenv()
-cred = credentials.Certificate(cert=os.environ.get('FIREBASE_CRED_PATH'))
+
+cred = credentials.Certificate({
+    "projectId": os.environ.get('FIREBASE_PROJECT_ID'),
+    "private_key": os.environ.get('FIREBASE_PRIVATE_KEY'),
+    "client_email": os.environ.get('FIREBASE_CLIENT_EMAIL'),
+})
 
 default_app = firebase_admin.initialize_app(cred, {
     "databaseURL": "https://focusdesignbot-default-rtdb.firebaseio.com",
