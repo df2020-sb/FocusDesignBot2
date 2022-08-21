@@ -7,6 +7,7 @@ from firebase_admin import db
 load_dotenv()
 
 cred = credentials.Certificate({
+    "type": "service_account",
     "projectId": os.environ.get('FIREBASE_PROJECT_ID'),
     "private_key": os.environ.get('FIREBASE_PRIVATE_KEY'),
     "client_email": os.environ.get('FIREBASE_CLIENT_EMAIL'),
