@@ -22,9 +22,5 @@ dispatcher = updater.dispatcher
 dispatcher.add_handler(telegram.ext.CommandHandler('start', start))
 dispatcher.add_handler(telegram.ext.MessageHandler(telegram.ext.Filters.text, handle_scenario_query))
 
-updater.start_webhook(listen="0.0.0.0",
-                      port=int(os.environ.get('PORT', 5000)),
-                      url_path=token,
-                      webhook_url='https://focus-design-bot.herokuapp.com/' + token
-                      )
-# updater.idle()
+updater.start_polling()
+updater.idle()
