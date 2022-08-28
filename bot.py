@@ -1,70 +1,133 @@
-import telegram
-import telegram.ext
 from dotenv import load_dotenv
-import os
-
+from datetime import datetime
 from telegram import *
+from telegram.ext import MessageHandler, CommandHandler, ConversationHandler, CallbackQueryHandler, Filters, Updater
+import os
+import re
 
-from constants import OUT_MESSAGES
-from sheets import get_scenario_status, get_team_scenarios
-from utils import is_team_name, getGreetingText
+from constants import OUT_MESSAGES, ACTION_TYPES
+from data import get_scenarios, send_update
+from utils import get_greeting_text, make_scenario_info_string
 
 load_dotenv()
-
 token = os.environ.get('TOKEN')
 
 
 def start(update, context):
-    user = update.message.chat.first_name
-    update.message.reply_text(f"{OUT_MESSAGES['greeting']}, {user}")
-    # context.bot.send_message(chat_id=update.effective_chat.id, text=OUT_MESSAGES['greeting'])
-
-
-def greet(update, context):
-    update.message.reply_text(getGreetingText(update.message.chat.first_name))
+    update.message.reply_text(get_greeting_text(update.message.chat.first_name))
 
 
 def handle_query(update, context):
     text = update.message.text
+    matching_scenarios = get_scenarios(text)
+    print(matching_scenarios)
+    reply = make_scenario_info_string(matching_scenarios)
 
-    if is_team_name(text):
-        context.bot.send_message(chat_id=update.effective_chat.id, text=get_team_scenarios(text), parse_mode='Markdown')
+    if not matching_scenarios:
+        update.message.reply_text(OUT_MESSAGES['wrong_input'])
+
+    elif len(matching_scenarios) == 1:
+        scenario_name = matching_scenarios[0]['name']
+        button1 = InlineKeyboardButton(text='Повысить приоритет', callback_data=f'up_priority, {scenario_name}')
+        button2 = InlineKeyboardButton(text='Понизить приоритет', callback_data=f'down_priority, {scenario_name}')
+        button3 = InlineKeyboardButton(text='Предложить срок', callback_data=f'suggest_deadline, {scenario_name}')
+        keyboard_inline = InlineKeyboardMarkup([[button1, button2], [button3]])
+        update.message.reply_text(reply, parse_mode='Markdown', reply_markup=keyboard_inline)
 
     else:
-        button1 = InlineKeyboardButton(text='Повысить приоритет', callback_data='button1 pressed')
-        button2 = InlineKeyboardButton(text='Понизить приоритет', callback_data='button2 pressed')
-        button3 = InlineKeyboardButton(text='Предложить срок', callback_data='button3 pressed')
-        keyboard_inline = InlineKeyboardMarkup([[button1, button2], [button3]])
-        update.message.reply_text(get_scenario_status(text), parse_mode='Html', reply_markup=keyboard_inline)
-        # context.bot.send_message(chat_id=update.effective_chat.id, text=get_scenario_status(text), parse_mode='Markdown', reply_markup=keyboard_inline)
-        # update.message.reply_text(get_scenario_status(text), parse_mode='Markdown')
+        update.message.reply_text(reply, parse_mode='Markdown')
 
 
-def callback1(update, context):
-    user = update.callback_query.from_user.first_name
-    context.bot.send_message(chat_id=update.effective_chat.id, text=f'Pressed button1, {user}')
-
-
-def handle_button_click(update, context):
+def handle_priority_change(update, context):
     query = update.callback_query
+    data = query.data.split(',')
+    action_type = data[0]
+    scenario_name = data[1].strip()
+    user = update.callback_query.from_user.first_name
     query.answer()
-    choice = query.data
-    if choice == 'button1 pressed':
-        callback1(update, context)
 
-    if choice == 'button2 pressed':
-        context.bot.send_message(chat_id=update.effective_chat.id, text='Pressed button2')
+    global payload
+    payload['scenario_name'] = scenario_name
+    payload['param_name'] = 'suggested_priority'
+    payload['value'] = '🔺high' if action_type == ACTION_TYPES['up_priority'] else 'low'
+    payload['meta'] = f"{user} {datetime.now().strftime('%d.%m %H:%M:%S')}"
 
-    if choice == 'button3 pressed':
-        context.bot.send_message(chat_id=update.effective_chat.id, text='Pressed button3')
+    reply = f'Попробуем поднять приоритет у {scenario_name}. Если получится, сообщим' if action_type == ACTION_TYPES[
+        'up_priority'] else f'С радостью понизим приоритет у {scenario_name}'
+
+    send_update(payload)
+    context.bot.send_message(chat_id=update.effective_chat.id, text=reply)
 
 
-updater = telegram.ext.Updater(token, use_context=True)
+def handle_deadline_change(update, context):
+    query = update.callback_query
+    data = query.data.split(',')
+    scenario_name = data[1].strip()
+    query.answer()
+
+    global payload
+    payload['scenario_name'] = scenario_name
+
+    context.bot.send_message(chat_id=update.effective_chat.id, text=f'Введи желаемую дату в формате дд.мм')
+    return date_input
+
+
+def handle_date_input(update, context):
+    input_text = update.message.text
+    is_correct_date = bool(re.match("(0[1-9]|[12][0-9]|3[01]).(0[1-9]|1[0-2])", input_text))
+
+    if is_correct_date:
+        user = update.message.chat.first_name
+
+        global payload
+        payload['param_name'] = 'suggested_deadline'
+        payload['value'] = input_text
+        payload['meta'] = f"{user} {datetime.now().strftime('%d.%m %H:%M:%S')}"
+        send_update(payload)
+        update.message.reply_text(f'Попробуем изменить срок у {payload["scenario_name"]} на {input_text}. Cообщим, если получится')
+        return ConversationHandler.END
+
+    else:
+        context.bot.send_message(chat_id=update.effective_chat.id, text=f'Некорректная дата')
+        return date_input
+
+
+def timeout(update, _):
+    update.message.reply_text('Время вышло. Будь решительнее в следующий раз')
+
+
+def end(update, _):
+    update.message.reply_text('END')
+    return ConversationHandler.END
+
+
+payload = {
+    'scenario_name': '',
+    'param_name': '',
+    'value': '',
+    'meta': '',
+
+}
+
+date_input = ''
+
+updater = Updater(token, use_context=True)
 dispatcher = updater.dispatcher
 
-dispatcher.add_handler(telegram.ext.CommandHandler('start', start))
-dispatcher.add_handler(telegram.ext.MessageHandler(telegram.ext.Filters.text, handle_query))
-dispatcher.add_handler(telegram.ext.CallbackQueryHandler(handle_button_click))
+dispatcher.add_handler(CommandHandler('start', start))
+dispatcher.add_handler(CallbackQueryHandler(handle_priority_change, pattern='up_priority'))
+dispatcher.add_handler(CallbackQueryHandler(handle_priority_change, pattern='down_priority'))
+dispatcher.add_handler(ConversationHandler(
+    entry_points=[CallbackQueryHandler(handle_deadline_change)],
+    states={
+        date_input: [MessageHandler(Filters.text, handle_date_input)],
+        ConversationHandler.TIMEOUT: [MessageHandler(Filters.text | Filters.command, timeout)],
+    },
+
+    fallbacks=[CommandHandler('end', end)],
+    conversation_timeout=60
+))
+dispatcher.add_handler(MessageHandler(Filters.text, handle_query))
 
 updater.start_polling()
 updater.idle()
