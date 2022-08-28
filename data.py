@@ -1,7 +1,14 @@
+import json
+
 import gspread
 from utils import is_team_name
+from dotenv import load_dotenv
+import os
 
-service_account = gspread.service_account()
+load_dotenv()
+creds = os.environ.get('NEW_GOOGLE_CREDS')
+
+service_account = gspread.service_account_from_dict(json.loads(creds))
 sheet = service_account.open('Scenarios')
 worksheet = sheet.worksheet('Sheet1')
 
