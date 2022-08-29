@@ -20,7 +20,6 @@ def start(update, context):
 def handle_query(update, context):
     text = update.message.text
     matching_scenarios = get_scenarios(text)
-    print(matching_scenarios)
     reply = make_scenario_info_string(matching_scenarios)
 
     if not matching_scenarios:
