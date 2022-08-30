@@ -8,14 +8,15 @@ def get_greeting_text(name):
 def make_scenario_info_string(scenarios):
     reply = """"""
     for sc in scenarios:
-        reply += f"*{sc['name'].title()}*\n{sc['priority']} • {sc['deadline']} • {sc['status']} • {sc['designer']}\n\n"
+        deadline = f" • {sc['deadline']}" if sc['deadline'] else ''
+        reply += f"*{sc['name']}*\n{sc['priority']}{deadline} • {sc['status']} • {sc['designer']}\n\n"
 
     return reply
 
 
 def is_team_name(name):
     for team in TEAMS:
-        if name.lower().strip() in team:
+        if name.lower().strip() in team.lower().strip():
             return True
 
 

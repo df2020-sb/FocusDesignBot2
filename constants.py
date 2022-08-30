@@ -1,4 +1,4 @@
-TEAMS = ['team1', 'team2']
+TEAMS = ['Башня', 'Альянс', 'Бионикл', '8бит', 'ForREST']
 ACTION_TYPES = {
      'up_priority': 'up_priority',
      'down_priority': 'down_priority',

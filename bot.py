@@ -11,10 +11,11 @@ from utils import get_greeting_text, make_scenario_info_string
 
 load_dotenv()
 token = os.environ.get('TOKEN')
-
+my_bot = Bot(token)
 
 def start(update, context):
-    update.message.reply_text(get_greeting_text(update.message.chat.first_name))
+    reply_markup = ReplyKeyboardRemove()
+    update.message.reply_text(get_greeting_text(update.message.chat.first_name), parse_mode='Markdown', reply_markup=reply_markup)
 
 
 def handle_query(update, context):
@@ -110,9 +111,9 @@ payload = {
 
 date_input = ''
 
+
 updater = Updater(token, use_context=True)
 dispatcher = updater.dispatcher
-
 dispatcher.add_handler(CommandHandler('start', start))
 dispatcher.add_handler(CallbackQueryHandler(handle_priority_change, pattern='up_priority'))
 dispatcher.add_handler(CallbackQueryHandler(handle_priority_change, pattern='down_priority'))
@@ -127,6 +128,5 @@ dispatcher.add_handler(ConversationHandler(
     conversation_timeout=60
 ))
 dispatcher.add_handler(MessageHandler(Filters.text, handle_query))
-
 updater.start_polling()
 updater.idle()
