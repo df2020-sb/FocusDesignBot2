@@ -25,7 +25,7 @@ def start(update, context):
                                                parse_mode='Markdown',
                                                reply_markup=reply_markup)
 
-        my_bot.pinChatMessage(chat_id=update.message.chat_id, message_id=message_obj.message_id)
+        # my_bot.pinChatMessage(chat_id=update.message.chat_id, message_id=message_obj.message_id)
 
     else:
         update.message.reply_text('Незарегистрированный пользователь')
