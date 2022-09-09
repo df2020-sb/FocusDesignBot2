@@ -37,14 +37,9 @@ def get_scenarios(query):
 
     for obj in scenarios:
         f_query = query.lower().strip()
-        print(obj['team'])
 
         query_test = obj['team'].lower().strip() if is_team_name(f_query) else obj['name'].lower().strip()
         if f_query in query_test:
             matching_scenarios.append(obj)
-
-    if is_team_name(f_query) and len(matching_scenarios) == 0:
-        return 'У твоей команды нет сценариев'
-
 
     return matching_scenarios
