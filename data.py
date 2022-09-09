@@ -34,12 +34,20 @@ def send_update(payload):
 def get_scenarios(query):
     scenarios = worksheet.get_all_records()
     matching_scenarios = []
+    f_query = query.lower().strip()
 
     for obj in scenarios:
-        f_query = query.lower().strip()
-
-        query_test = obj['team'].lower().strip() if is_team_name(f_query) else obj['name'].lower().strip()
-        if f_query in query_test:
+        if is_team_name(f_query) and f_query in obj['team'].lower().strip():
             matching_scenarios.append(obj)
+
+        else:
+            f_sc_name = obj['name'].lower().strip()
+
+            if f_query == f_sc_name:
+                matching_scenarios.append(obj)
+                break
+
+            elif f_query in f_sc_name:
+                matching_scenarios.append(obj)
 
     return matching_scenarios
