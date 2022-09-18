@@ -7,34 +7,61 @@ import re
 
 from constants import OUT_MESSAGES, ACTION_TYPES
 from data import get_scenarios, send_update
-from utils import get_greeting_text, make_scenario_info_string, is_team_name
+from utils import get_greeting_text, make_scenario_info_string, is_team_name, get_user_ids
 
 load_dotenv()
 token = os.environ.get('TOKEN')
 my_bot = Bot(token)
-
-users = [182441987, 78828759, 147534504, 367196652, 204133455, 180030971, 238519111, 128041559, 755639858, 1083593052, 1029460206]
+users = get_user_ids()
 
 
 def start(update, context):
     reply_markup = ReplyKeyboardRemove()
     user_id = update.effective_chat.id
     if user_id in users:
-        message_obj = context.bot.send_message(chat_id=update.effective_chat.id,
-                                               text=get_greeting_text(update.message.chat.first_name),
-                                               parse_mode='Markdown',
-                                               reply_markup=reply_markup)
+        context.bot.send_message(chat_id=update.effective_chat.id,
+                                 text=get_greeting_text(update.message.chat.first_name),
+                                 parse_mode='Markdown',
+                                 reply_markup=reply_markup)
 
-        # my_bot.pinChatMessage(chat_id=update.message.chat_id, message_id=message_obj.message_id)
+        send_and_pin_statuses(update, context)
 
     else:
-        update.message.reply_text('Незарегистрированный пользователь')
+        update.message.reply_text(OUT_MESSAGES['unregistered_user'])
+
+
+def statuslegend(update, context):
+    user_id = update.effective_chat.id
+    if user_id in users:
+        send_and_pin_statuses(update, context)
+    else:
+        update.message.reply_text(OUT_MESSAGES['unregistered_user'])
+
+
+def help(update, context):
+    user_id = update.effective_chat.id
+    if user_id in users:
+        context.bot.send_message(chat_id=update.effective_chat.id,
+                                 text=OUT_MESSAGES['help'],
+                                 parse_mode='Markdown')
+
+    else:
+        update.message.reply_text(OUT_MESSAGES['unregistered_user'])
+
+
+def send_and_pin_statuses(update, context):
+    statuses_msg = context.bot.send_message(chat_id=update.effective_chat.id,
+                                            text=OUT_MESSAGES['statuses'],
+                                            parse_mode='Markdown')
+
+    my_bot.unpinAllChatMessages(chat_id=update.effective_chat.id)
+    my_bot.pinChatMessage(chat_id=update.effective_chat.id, message_id=statuses_msg.message_id)
 
 
 def handle_query(update, context):
     user_id = update.effective_chat.id
     if user_id not in users:
-        update.message.reply_text('Незарегистрированный пользователь')
+        update.message.reply_text(OUT_MESSAGES['unregistered_user'])
     else:
         text = update.message.text
         matching_scenarios = get_scenarios(text)
@@ -141,13 +168,16 @@ date_input = ''
 updater = Updater(token, use_context=True)
 dispatcher = updater.dispatcher
 dispatcher.add_handler(CommandHandler('start', start))
+dispatcher.add_handler(CommandHandler('statuslegend', statuslegend))
+dispatcher.add_handler(CommandHandler('help', help))
 dispatcher.add_handler(CallbackQueryHandler(handle_priority_change, pattern='up_priority'))
 dispatcher.add_handler(CallbackQueryHandler(handle_priority_change, pattern='down_priority'))
 dispatcher.add_handler(ConversationHandler(
     entry_points=[CallbackQueryHandler(handle_deadline_change)],
     states={
         date_input: [MessageHandler(Filters.text, handle_date_input)],
-        ConversationHandler.TIMEOUT: [CallbackQueryHandler(timeout, pattern='suggest_deadline'), MessageHandler(Filters.text | Filters.command, timeout)],
+        ConversationHandler.TIMEOUT: [CallbackQueryHandler(timeout, pattern='suggest_deadline'),
+                                      MessageHandler(Filters.text | Filters.command, timeout)],
     },
 
     fallbacks=[CommandHandler('end', end)],
