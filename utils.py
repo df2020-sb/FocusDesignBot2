@@ -1,4 +1,4 @@
-from constants import TEAMS, USERS
+from constants import TEAMS
 
 
 def get_greeting_text(name):
@@ -24,9 +24,4 @@ def is_team_name(name):
             return True
 
 
-def get_user_ids():
-    user_ids = []
-    for user in USERS:
-        user_ids.append(user[0])
 
-    return user_ids

@@ -6,8 +6,8 @@ import os
 import re
 
 from constants import OUT_MESSAGES, ACTION_TYPES
-from data import get_scenarios, send_update
-from utils import get_greeting_text, make_scenario_info_string, is_team_name, get_user_ids
+from data import get_scenarios, send_update, get_user_ids, send_user_update
+from utils import get_greeting_text, make_scenario_info_string, is_team_name
 
 load_dotenv()
 token = os.environ.get('TOKEN')
@@ -18,6 +18,7 @@ users = get_user_ids()
 def start(update, context):
     reply_markup = ReplyKeyboardRemove()
     user_id = update.effective_chat.id
+    send_user_update(str(user_id))
     if user_id in users:
         context.bot.send_message(chat_id=update.effective_chat.id,
                                  text=get_greeting_text(update.message.chat.first_name),
@@ -60,6 +61,7 @@ def send_and_pin_statuses(update, context):
 
 def handle_query(update, context):
     user_id = update.effective_chat.id
+    send_user_update(str(user_id))
     if user_id not in users:
         update.message.reply_text(OUT_MESSAGES['unregistered_user'])
     else:

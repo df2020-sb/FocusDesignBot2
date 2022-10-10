@@ -15,16 +15,16 @@ OUT_MESSAGES = {
 
 }
 
-USERS = [
-    [182441987, 'Dmitriy', 'Yukhin'],
-    [78828759, 'Stas', 'V'],
-    [147534504, 'Dmitry', 'Andreev'],
-    [367196652, 'Stanislav', 'Koshevoy'],
-    [204133455, 'Artem', 'Mukhin'],
-    [180030971, 'Denis', 'Fomin'],
-    [238519111, 'Ksenia', 'Chesnokova'],
-    [128041559, 'Dmitry', 'Nösov'],
-    [755639858, 'Светлана', 'П.'],
-    [1083593052, 'Dimati', '013'],
-    [1029460206, 'Евгений', 'Шевелев'],
-]
+# USERS = [
+#     [182441987, 'Dmitriy', 'Yukhin'],
+#     [78828759, 'Stas', 'V'],
+#     [147534504, 'Dmitry', 'Andreev'],
+#     [367196652, 'Stanislav', 'Koshevoy'],
+#     [204133455, 'Artem', 'Mukhin'],
+#     [180030971, 'Denis', 'Fomin'],
+#     [238519111, 'Ksenia', 'Chesnokova'],
+#     [128041559, 'Dmitry', 'Nösov'],
+#     [755639858, 'Светлана', 'П.'],
+#     [1083593052, 'Dimati', '013'],
+#     [1029460206, 'Евгений', 'Шевелев'],
+# ]
